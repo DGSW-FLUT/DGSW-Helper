@@ -10,8 +10,11 @@ DGSW Helper, the slack bot on Python
 # 실행 화면
 
 ![alt text](meal_info.png)
+
 ![alt text](class_info.png)
+
 ![alt text](schedule.png)
+
 ![alt text](weather.png)
 
 # Requirements 

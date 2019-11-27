@@ -392,7 +392,7 @@ def someone_msg(**payload):
             text=msg)
             
 ssl_context = ssl.create_default_context(cafile=certifi.where())
-slack_token = 'xoxb-849581889920-849264423684-WuWMYcGnmYu8qauEEgDDGmnx'
+slack_token = conf['Slack-Api']['BotOAuthToken']
 rtm_client = slack.RTMClient(token=slack_token, ssl=ssl_context)
 rtm_client.start()
 

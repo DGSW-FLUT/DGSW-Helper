@@ -344,7 +344,7 @@ def someone_msg(**payload):
                         curr += datetime.timedelta(days=int(row['day']))
                         curr = curr.replace(hour=int(row['hour']))
                     dayofweek_name = ['월','화','수','목','금','토','일']
-                    msg += '%s요일 %02d시 :thermometer:%s(%s,%s) ' % (dayofweek_name[curr.weekday()], int(curr.hour), mod_weather.check_temperature(row['temp']), mod_weather.check_temperature(row['tmn']), mod_weather.check_temperature(row['tmx']))
+                    msg += '* %s요일 %02d시 :thermometer:%s(%s,%s) ' % (dayofweek_name[curr.weekday()], int(curr.hour), mod_weather.check_temperature(row['temp']), mod_weather.check_temperature(row['tmn']), mod_weather.check_temperature(row['tmx']))
                     if row['sky'] == '1':
                         msg += ':sunny:'
                     elif row['sky'] == '3':

@@ -54,8 +54,10 @@ alergi = [
 script = {
     "show_meallist" : "밥 맛있게 묵으리~",
     "quest_mealtime" : "아침? 점심? 저녁? 뭘 말하는고?",
+    "quest_class" : "몇학년 몇반이고?",
     "show_classlist" : "공부 열심히 하려무나",
-    "show_schedule" : "시간관리 잘 하고~"
+    "show_schedule" : "시간관리 잘 하고~",
+    "thanks" : "고맙다"
 }
 
 def adapt_alergi_emoji(text):
@@ -80,7 +82,7 @@ def someone_msg(**payload):
         msg = ''
         
         if data['text'].find('병규형') != -1:
-            if data['text'].find('급식') != -1:
+            if data['text'].find('급식') != -1 or data['text'].find('밥') != -1:
                 now = datetime.datetime.now()
 
                 dow = -1
@@ -134,38 +136,61 @@ def someone_msg(**payload):
                 elif data['text'].find('저녁') != -1:
                     daytime = 3
                 
-                if dday == 0 and dow == 0:
+                if dday == 0 and dow == -1:
                     mod_mealinfo.set_date(now.year, now.month)
-                    
-                    if now < datetime.datetime(year=now.year,month=now.month,day=now.day,hour=7,minute=30):
+
+                    if daytime == 0:
+                        if now < (datetime.datetime(year=now.year,month=now.month,day=now.day,hour=7,minute=30) if now.weekday() < 5 else datetime.datetime(year=now.year,month=now.month,day=now.day,hour=8,minute=20)):
+                            meal_list = mod_mealinfo.get(now.day)
+                            
+                            msg += '*오늘 아침*\n'
+                            for row in meal_list[0]['DDISH_NM'].replace('<br/>', '\n').split('\n'):
+                                msg += '• %s\n' % adapt_alergi_emoji(row)
+                            
+                            
+                        if now < datetime.datetime(year=now.year,month=now.month,day=now.day,hour=12,minute=40):
+                            meal_list = mod_mealinfo.get(now.day)
+                            
+                            msg += '*오늘 점심*\n'
+                            for row in meal_list[1]['DDISH_NM'].replace('<br/>', '\n').split('\n'):
+                                msg += '• %s\n' % adapt_alergi_emoji(row)
+                            
+                            
+                        if now < datetime.datetime(year=now.year,month=now.month,day=now.day,hour=18,minute=30):
+                            meal_list = mod_mealinfo.get(now.day)
+                            
+                            msg += '*오늘 저녁*\n'
+                            for row in meal_list[2]['DDISH_NM'].replace('<br/>', '\n').split('\n'):
+                                msg += '• %s\n' % adapt_alergi_emoji(row)
+                        else:
+                            meal_list = mod_mealinfo.get(now.day+1)
+                            
+                            msg += '*내일 아침*\n'
+                            for row in meal_list[0]['DDISH_NM'].replace('<br/>', '\n').split('\n'):
+                                msg += '• %s\n' % adapt_alergi_emoji(row)
+                            msg += '*내일 점심*\n'
+                            for row in meal_list[1]['DDISH_NM'].replace('<br/>', '\n').split('\n'):
+                                msg += '• %s\n' % adapt_alergi_emoji(row)
+                            msg += '*내일 저녁*\n'
+                            for row in meal_list[2]['DDISH_NM'].replace('<br/>', '\n').split('\n'):
+                                msg += '• %s\n' % adapt_alergi_emoji(row)
+                    elif daytime == 1:
                         meal_list = mod_mealinfo.get(now.day)
-                        
+                            
                         msg += '*오늘 아침*\n'
                         for row in meal_list[0]['DDISH_NM'].replace('<br/>', '\n').split('\n'):
                             msg += '• %s\n' % adapt_alergi_emoji(row)
-                        
-                        
-                    elif now < datetime.datetime(year=now.year,month=now.month,day=now.day,hour=12,minute=40):
+                    elif daytime == 2:
                         meal_list = mod_mealinfo.get(now.day)
-                        
+                            
                         msg += '*오늘 점심*\n'
                         for row in meal_list[1]['DDISH_NM'].replace('<br/>', '\n').split('\n'):
                             msg += '• %s\n' % adapt_alergi_emoji(row)
-                        
-                        
-                    elif now < datetime.datetime(year=now.year,month=now.month,day=now.day,hour=18,minute=30):
+                    elif daytime == 3:
                         meal_list = mod_mealinfo.get(now.day)
-                        
+                            
                         msg += '*오늘 저녁*\n'
                         for row in meal_list[2]['DDISH_NM'].replace('<br/>', '\n').split('\n'):
-                            msg += '• %s\n' % adapt_alergi_emoji(row)
-                        
-                        
-                    else:
-                        meal_list = mod_mealinfo.get(now.day+1)
-                        
-                        msg += '*내일 아침*\n'
-                        for row in meal_list[0]['DDISH_NM'].replace('<br/>', '\n').split('\n'):
                             msg += '• %s\n' % adapt_alergi_emoji(row)
                         
                 elif dow != -1:
@@ -187,11 +212,18 @@ def someone_msg(**payload):
                     
                 elif dday != 0:
                     now += datetime.timedelta(days=dday)
-                    print(now.weekday())
+                    #print(now.weekday())
                     if now.weekday() == 6:
                         daytime = 1
                     if daytime == 0:
-                        msg = script["quest_mealtime"]
+                        mod_mealinfo.set_date(now.year, now.month)
+                        meal_list = mod_mealinfo.get(now.day)
+                        daytime_name = ['아침', '점심', '저녁']
+
+                        for _ in range(3):
+                            msg += '*%2d월 %2d일 %2s*\n' % (now.month, now.day, daytime_name[_])
+                            for row in meal_list[_]['DDISH_NM'].replace('<br/>', '\n').split('\n'):
+                                msg += '• %s\n' % adapt_alergi_emoji(row)
                     else:                        
                         mod_mealinfo.set_date(now.year, now.month)
                         meal_list = mod_mealinfo.get(now.day)
@@ -212,8 +244,13 @@ def someone_msg(**payload):
                         msg += '• %s\n' % adapt_alergi_emoji(row)
                     
                     
+                web_client.reactions_add(
+                    name = 'heavy_check_mark',
+                    channel=data['channel'],
+                    timestamp=data['ts'],
+                )
                     
-            elif data['text'].find('시간표') != -1:
+            elif data['text'].find('시간표') != -1 or data['text'].find('수업') != -1:
                 now = datetime.datetime.now()
                 
                 dow = -1
@@ -303,6 +340,15 @@ def someone_msg(**payload):
                         for row in class_list:
                             msg += '%1s교시. %s\n' % (row['PERIO'], row['ITRT_CNTNT'])
                         msg += '```'
+                else:
+                    msg = script['quest_class']
+                
+                web_client.reactions_add(
+                    name = 'heavy_check_mark',
+                    channel=data['channel'],
+                    timestamp=data['ts'],
+                )
+                    
             elif data['text'].find('일정') != -1 or data['text'].find('행사') != -1 or data['text'].find('스케줄') != -1:
                 mod_eventinfo.load()
                 now = datetime.datetime.now()
@@ -331,7 +377,13 @@ def someone_msg(**payload):
                     
                         
                 msg += '```'
-            elif data['text'].find('날씨') != -1:
+                
+                web_client.reactions_add(
+                    name = 'heavy_check_mark',
+                    channel=data['channel'],
+                    timestamp=data['ts'],
+                )
+            elif data['text'].find('날씨') != -1 or data['text'].find('일기예보') != -1:
                 mod_weather.get()
                 now = datetime.datetime(year=int(mod_weather.now[0:4]),month=int(mod_weather.now[4:6]),day=int(mod_weather.now[6:8]))
                 
@@ -383,16 +435,37 @@ def someone_msg(**payload):
                         
                     msg += '\n'
                 
+                web_client.reactions_add(
+                    name = 'heavy_check_mark',
+                    channel=data['channel'],
+                    timestamp=data['ts'],
+                )
+            elif data['text'].find('칭찬해') != -1 or data['text'].find('고마워') != -1 or data['text'].find('고맙다') != -1 or data['text'].find('ㄳ') != -1 or data['text'].find('잘했어') != -1:
+                msg = '<@%s> %s:president::president::president:\n' % (data['user'], script["thanks"])
+                web_client.reactions_add(
+                    name = 'thumbsup',
+                    channel=data['channel'],
+                    timestamp=data['ts'],
+                )
                 
         if len(data['text']) > 6 and data['text'][:6] == '&amp;^':
             msg = data['text'][6:]
         if msg != '':
+            #print(msg)
             web_client.chat_postMessage(
-            channel='#general',
+            channel='#random',
             text=msg)
             
 ssl_context = ssl.create_default_context(cafile=certifi.where())
 slack_token = conf['Slack-Api']['BotOAuthToken']
-rtm_client = slack.RTMClient(token=slack_token, ssl=ssl_context)
-rtm_client.start()
+
+while True:
+    try:
+        rtm_client = slack.RTMClient(token=slack_token, ssl=ssl_context)
+        rtm_client.start()
+    except Exception as e:
+        file = open('log.log', 'a')
+        file.write(str(e))
+        file.write('\n')
+        file.close()
 

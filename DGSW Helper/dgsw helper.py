@@ -81,7 +81,7 @@ def someone_msg(**payload):
         #print(data)
         msg = ''
         
-        if data['text'].find('병규형') != -1:
+        if data['text'].find('병규형') != -1 or data['text'].find(':president:') != -1 or data['text'].find(':dgsw:') != -1:
             if data['text'].find('급식') != -1 or data['text'].find('밥') != -1:
                 now = datetime.datetime.now()
 
@@ -386,54 +386,64 @@ def someone_msg(**payload):
             elif data['text'].find('날씨') != -1 or data['text'].find('일기예보') != -1:
                 mod_weather.get()
                 now = datetime.datetime(year=int(mod_weather.now[0:4]),month=int(mod_weather.now[4:6]),day=int(mod_weather.now[6:8]))
+                dday = -1
+                if data['text'].find('오늘') != -1:
+                    dday = 0
+                if data['text'].find('내일') != -1:
+                    dday = 1
+                if data['text'].find('모레') != -1:
+                    dday = 2
                 
                 for row in mod_weather.data:
                     curr = now
+                    sday = 0
                     if int(row['hour']) == 24:
                         curr += datetime.timedelta(days=int(row['day']) + 1)
                         curr = curr.replace(hour=0)
+                        sday += 1
                     else:
                         curr += datetime.timedelta(days=int(row['day']))
                         curr = curr.replace(hour=int(row['hour']))
-                    dayofweek_name = ['월','화','수','목','금','토','일']
-                    msg += '* %s요일 %02d시 :thermometer:%s(%s,%s) ' % (dayofweek_name[curr.weekday()], int(curr.hour), mod_weather.check_temperature(row['temp']), mod_weather.check_temperature(row['tmn']), mod_weather.check_temperature(row['tmx']))
-                    if row['sky'] == '1':
-                        msg += ':sunny:'
-                    elif row['sky'] == '3':
-                        msg += ':sun_small_cloud:'
-                    elif row['sky'] == '4':
-                        msg += ':cloud: '
-                    else:
-                        msg += row['sky']
-                        
-                    if row['pty'] == '0':
-                        msg += ':sunny:'
-                    elif row['pty'] == '1':
-                        msg += ':rain_cloud:'
-                    elif row['pty'] == '2':
-                        msg += ':cloud: '
-                    elif row['pty'] == '3':
-                        msg += ':snow_cloud: '
-                    elif row['pty'] == '4':
-                        msg += ':thunder_cloud_and_rain:'
-                    else:
-                        msg += row['pty']
+                    if dday == -1 or dday == int(row['day']) + sday:
+                        dayofweek_name = ['월','화','수','목','금','토','일']
+                        msg += '* %s요일 %02d시 :thermometer:%s(%s,%s) ' % (dayofweek_name[curr.weekday()], int(curr.hour), mod_weather.check_temperature(row['temp']), mod_weather.check_temperature(row['tmn']), mod_weather.check_temperature(row['tmx']))
+                        if row['sky'] == '1':
+                            msg += ':sunny:'
+                        elif row['sky'] == '3':
+                            msg += ':sun_small_cloud:'
+                        elif row['sky'] == '4':
+                            msg += ':cloud: '
+                        else:
+                            msg += row['sky']
+                            
+                        if row['pty'] == '0':
+                            msg += ':sunny:'
+                        elif row['pty'] == '1':
+                            msg += ':rain_cloud:'
+                        elif row['pty'] == '2':
+                            msg += ':cloud: '
+                        elif row['pty'] == '3':
+                            msg += ':snow_cloud: '
+                        elif row['pty'] == '4':
+                            msg += ':thunder_cloud_and_rain:'
+                        else:
+                            msg += row['pty']
 
-                    pop = int(row['pop'])
-                    if pop < 33:
-                        msg += ' :closed_umbrella:'
-                    elif pop < 66:
-                        msg += ' :umbrella:'
-                    else:
-                        msg += ' :umbrella_with_rain_drops:'
-                    msg += '%3s%%' % (row['pop'])
-                    msg += ' :droplet:%3s%%' % (row['reh'])
+                        pop = int(row['pop'])
+                        if pop < 33:
+                            msg += ' :closed_umbrella:'
+                        elif pop < 66:
+                            msg += ' :umbrella:'
+                        else:
+                            msg += ' :umbrella_with_rain_drops:'
+                        msg += '%3s%%' % (row['pop'])
+                        msg += ' :droplet:%3s%%' % (row['reh'])
 
-                    wind_dir_emoji = [':arrow_down:', ':arrow_lower_left:', ':arrow_left:', ':arrow_upper_left:', ':arrow_up:', ':arrow_upper_right:', ':arrow_right:', ':arrow_lower_right:']
+                        wind_dir_emoji = [':arrow_down:', ':arrow_lower_left:', ':arrow_left:', ':arrow_upper_left:', ':arrow_up:', ':arrow_upper_right:', ':arrow_right:', ':arrow_lower_right:']
 
-                    msg += ' %s%sm/s' % (wind_dir_emoji[int(row['wd'])], row['ws'][:3])
-                        
-                    msg += '\n'
+                        msg += ' %s%sm/s' % (wind_dir_emoji[int(row['wd'])], row['ws'][:3])
+                            
+                        msg += '\n'
                 
                 web_client.reactions_add(
                     name = 'heavy_check_mark',
@@ -464,8 +474,11 @@ while True:
         rtm_client = slack.RTMClient(token=slack_token, ssl=ssl_context)
         rtm_client.start()
     except Exception as e:
+        print(str(e))
         file = open('log.log', 'a')
         file.write(str(e))
         file.write('\n')
         file.close()
+    #print('Raise!')
+    time.sleep(5)
 

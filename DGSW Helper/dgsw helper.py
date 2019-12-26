@@ -3,7 +3,7 @@ import slack
 import ssl
 import certifi
 import MealInfo, ClassInfo, EventInfo, Weather
-import datetime, time
+import datetime, time, os, time, sys, traceback
 
 data = io.open('config.json', mode='r', encoding='utf-8').read()
 conf = json.loads(data)
@@ -164,16 +164,12 @@ def someone_msg(**payload):
                                 msg += '• %s\n' % adapt_alergi_emoji(row)
                         else:
                             meal_list = mod_mealinfo.get(now.day+1)
-                            
-                            msg += '*내일 아침*\n'
-                            for row in meal_list[0]['DDISH_NM'].replace('<br/>', '\n').split('\n'):
-                                msg += '• %s\n' % adapt_alergi_emoji(row)
-                            msg += '*내일 점심*\n'
-                            for row in meal_list[1]['DDISH_NM'].replace('<br/>', '\n').split('\n'):
-                                msg += '• %s\n' % adapt_alergi_emoji(row)
-                            msg += '*내일 저녁*\n'
-                            for row in meal_list[2]['DDISH_NM'].replace('<br/>', '\n').split('\n'):
-                                msg += '• %s\n' % adapt_alergi_emoji(row)
+                            daytime_name = ['아침', '점심', '저녁']
+
+                            for _ in range(len(meal_list)):
+                                msg += '*내일 %s*\n' % daytime_name[_]
+                                for row in meal_list[0]['DDISH_NM'].replace('<br/>', '\n').split('\n'):
+                                    msg += '• %s\n' % adapt_alergi_emoji(row)
                     elif daytime == 1:
                         meal_list = mod_mealinfo.get(now.day)
                             
@@ -474,11 +470,15 @@ while True:
         rtm_client = slack.RTMClient(token=slack_token, ssl=ssl_context)
         rtm_client.start()
     except Exception as e:
-        print(str(e))
-        file = open('log.log', 'a')
-        file.write(str(e))
-        file.write('\n')
-        file.close()
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        error = traceback.format_exc()
+        error = error.replace(os.path.dirname(os.path.realpath(__file__)), ".")
+        print(error)
+        #file = open('log.log', 'a')
+        #file.write(str(e))
+        #file.write('\n')
+        #file.close()
     #print('Raise!')
     time.sleep(5)
 
